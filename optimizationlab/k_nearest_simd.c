@@ -19,9 +19,6 @@
 /* Number of elements in a vector */
 #define VSIZE VBYTES/sizeof(data_t)
 
-int printingNorm = 1;
-int printingMyNorm = 1;
-
 
 /* Vector data type */
 typedef data_t vec_t __attribute__ ((vector_size(VBYTES)));

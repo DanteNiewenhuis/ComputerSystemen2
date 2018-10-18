@@ -52,12 +52,23 @@ OPTIONS:
 
 data_t my_squared_eucledean_distance(data_t *x,data_t *y, int length){
 	data_t distance = 0;
-    data_t diff;
+    data_t diff, diff1, diff2, diff3;
 	int i = 0;
 
-	for (i = 0; i < length; i++) {
-        distance += (mult(abs_diff(x[i],y[i]), abs_diff(x[i],y[i])));
+	for (i = 0; i < length - 3; i+=4) {
+        diff = x[i]-y[i];
+        diff1 = x[i+1]-y[i+1];
+        diff2 = x[i+2]-y[i+2];
+        diff3 = x[i+3]-y[i+3];
+        
+        distance += diff * diff;
+        distance += diff1 * diff1;
+        distance += diff2 * diff2;
+        distance += diff3 * diff3;
 	}
+    while(i<length){
+        distance += ((x[i]-y[i])*(x[i]-y[i]));
+    }
 
 	return distance;
 }
@@ -72,13 +83,44 @@ data_t norm(data_t *x, int length){
     return n;
 }
 
+data_t my_norm(data_t *x, int length){
+    data_t n = 0;
+    int i = 0;
+
+    for (i = 0; i < length; i++){
+        n += (x[i] * x[i]);
+    }
+    
+    return sqrt(n);
+}
+
 data_t cosine_similarity(data_t *x, data_t *y, int length){
     data_t sim=0;
     int i=0;
-    for(i=0;i<length;i++){
-        sim += mult(x[i],y[i]);
+    for(i = 0; i < length; i++){
+        sim += mult(x[i], y[i]);
     }
     sim = sim / mult(norm(x,FEATURE_LENGTH),norm(y,FEATURE_LENGTH));
+    return sim;
+}
+
+data_t my_cosine_similarity(data_t *x, data_t *y, int length){
+    data_t sim=0;
+    int i=0;
+
+    for(i = 0; i < length - 4; i+=4){
+        sim += x[i] * y[i];
+        sim += x[i+1] * y[i+1];
+        sim += x[i+2] * y[i+2];
+        sim += x[i+3] * y[i+3];
+    }
+
+    while (i < length) {
+        sim += (x[i] * y[i]);
+        i++;
+    }
+
+    sim = sim / mult(my_norm(x,FEATURE_LENGTH), my_norm(y,FEATURE_LENGTH));
     return sim;
 }
 
@@ -167,7 +209,7 @@ data_t *opt_classify_ED(unsigned int lookFor, unsigned int *found) {
     data_t* x = features[lookFor];
 
 	for(i = 0; i < ROWS - 1; i++){
-		result[i] = squared_eucledean_distance(x,features[i],FEATURE_LENGTH);
+		result[i] = my_squared_eucledean_distance(x,features[i],FEATURE_LENGTH);
 	}
 
     min_distance = result[0];
@@ -221,10 +263,10 @@ data_t *opt_classify_CS(unsigned int lookFor, unsigned int *found) {
     timer_start(&stv);
 
     //MODIFY FROM HERE
-	min_distance = cosine_similarity(features[lookFor],features[0],FEATURE_LENGTH);
+	min_distance = my_cosine_similarity(features[lookFor],features[0],FEATURE_LENGTH);
     	result[0] = min_distance;
 	for(i=1;i<ROWS-1;i++) {
-		current_distance = cosine_similarity(features[lookFor],features[i],FEATURE_LENGTH);
+		current_distance = my_cosine_similarity(features[lookFor],features[i],FEATURE_LENGTH);
         	result[i]=current_distance;
 		if(current_distance>min_distance){
 			min_distance=current_distance;
